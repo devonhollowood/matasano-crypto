@@ -1,0 +1,12 @@
+[package]
+
+name = "p1_hex_to_base_64"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p1_hex_to_base_64"
+
+[dependencies]
+rustc-serialize = "0.2"
