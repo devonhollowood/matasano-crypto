@@ -1,0 +1,12 @@
+[package]
+
+name = "p2_fixed_xor"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p2_fixed_xor"
+
+[dependencies]
+rustc-serialize = "0.2"
