@@ -1,0 +1,12 @@
+[package]
+
+name = "p4_detect_single_byte_xor"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p4_detect_single_byte_xor"
+
+[dependencies]
+rustc-serialize = "0.2"
