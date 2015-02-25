@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
 pub fn best_score(texts: &Vec<String>) -> Option<String> {
-    use std::iter::IteratorExt;
     let mut min_score = 0f32;
     let mut min_answer = String::new();
     for text in texts {
@@ -12,31 +11,37 @@ pub fn best_score(texts: &Vec<String>) -> Option<String> {
             min_answer = text.clone();
         }
     }
-    if min_score!=0f32 {println!("Local best: {:?}: {}", min_answer, min_score);}
     if min_score==0f32 {None}
     else {Some(min_answer)}
 }
 
 pub fn score(text: &str) -> f32 { 
-    let n_alpha = text.chars().filter(|c| {c.is_alphabetic() || *c==' '}).count();
-    let n_expected = |c| {english_frequency(c).unwrap()*(n_alpha as f32)};
-    let alpha = "abcdefghijklmnopqrstuvwxyz ";
-    let exp : Vec<f32> = alpha.chars().map(n_expected).collect();
+    let n_expected = |c| {english_frequency(c)*(text.len() as f32)};
+    let exp : Vec<f32> = KEYS.chars().map(n_expected).collect();
     let occurances = occurances(text);
-    let n_observed = |c| {occurances.get(&c).unwrap().clone()};
-    let obs : Vec<f32> = alpha.chars().map(n_observed).collect();
+    let n_observed = |c| {
+        *occurances.get(&c).unwrap()
+    };
+    let obs : Vec<f32> = KEYS.chars().map(n_observed).collect();
     let obs_and_exp : Vec<(f32, f32)> = 
         obs.iter().cloned().zip(exp.iter().cloned()).collect();
     chi_square(obs_and_exp.as_slice())
 }
 
+static KEYS : &'static str = "abcdefghijklmnopqrstuvwxyz _"; //_ = "other"
+
+fn to_key(c : char) -> char {
+    if KEYS.contains_char(c.to_lowercase()) {c.to_lowercase()}
+    else {'_'}
+}
+
 fn occurances(text: &str) -> HashMap<char, f32>{
     let mut counts : HashMap<char, f32> = HashMap::new();
-    for c in "abcdefghijklmnopqrstuvwxyz ".chars() {
+    for c in KEYS.chars() {
         counts.insert(c, 0f32);
     }
     for c in text.chars() {
-        match counts.get_mut(&c.to_lowercase()) {
+        match counts.get_mut(&to_key(c)) {
             Some(count) => *count += 1f32,
             None        => continue,
         }
@@ -54,35 +59,35 @@ fn chi_square(obs_and_exp : &[(f32, f32)]) -> f32 {
     sum
 }
 
-fn english_frequency(c: char) -> Option<f32>{
+fn english_frequency(c: char) -> f32{
     match c.to_lowercase() {
-        'a' => Some(0.0651738),
-        'b' => Some(0.0124248),
-        'c' => Some(0.0217339),
-        'd' => Some(0.0349835),
-        'e' => Some(0.1041442),
-        'f' => Some(0.0197881),
-        'g' => Some(0.0158610),
-        'h' => Some(0.0492888),
-        'i' => Some(0.0558094),
-        'j' => Some(0.0009033),
-        'k' => Some(0.0050529),
-        'l' => Some(0.0331490),
-        'm' => Some(0.0202124),
-        'n' => Some(0.0564513),
-        'o' => Some(0.0596302),
-        'p' => Some(0.0137645),
-        'q' => Some(0.0008606),
-        'r' => Some(0.0497563),
-        's' => Some(0.0515760),
-        't' => Some(0.0729357),
-        'u' => Some(0.0225134),
-        'v' => Some(0.0082903),
-        'w' => Some(0.0171272),
-        'x' => Some(0.0013692),
-        'y' => Some(0.0145984),
-        'z' => Some(0.0007836),
-        ' ' => Some(0.1918182),
-        _   => None,
+        'a' => 0.0609,
+        'b' => 0.0105,
+        'c' => 0.0284,
+        'd' => 0.0292,
+        'e' => 0.1136,
+        'f' => 0.0179,
+        'g' => 0.0138,
+        'h' => 0.0341,
+        'i' => 0.0544,
+        'j' => 0.0024,
+        'k' => 0.0041,
+        'l' => 0.0292,
+        'm' => 0.0276,
+        'n' => 0.0544,
+        'o' => 0.0600,
+        'p' => 0.0195,
+        'q' => 0.0024,
+        'r' => 0.0495,
+        's' => 0.0568,
+        't' => 0.0803,
+        'u' => 0.0243,
+        'v' => 0.0097,
+        'w' => 0.0138,
+        'x' => 0.0024,
+        'y' => 0.0130,
+        'z' => 0.0003,
+        ' ' => 0.1217,
+        _   => 0.0657,
     }
 }
