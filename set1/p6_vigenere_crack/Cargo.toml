@@ -1,0 +1,12 @@
+[package]
+
+name = "p6_vigenere_crack"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p6_vigenere_crack"
+
+[dependencies]
+rustc-serialize = "0.2"
