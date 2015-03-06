@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 
-pub fn best_score(texts: &Vec<String>) -> Option<String> {
+pub fn best_score(texts: &Vec<String>) -> String {
     let mut min_score = 0f32;
     let mut min_answer = "";
     for text in texts {
@@ -11,8 +10,7 @@ pub fn best_score(texts: &Vec<String>) -> Option<String> {
             min_answer = &text[..];
         }
     }
-    if min_score==0f32 {None}
-    else {Some(String::from_str(min_answer))}
+    String::from_str(min_answer)
 }
 
 pub fn score(text: &str) -> f32 { 
@@ -31,7 +29,7 @@ pub fn score(text: &str) -> f32 {
 static KEYS : &'static str = "abcdefghijklmnopqrstuvwxyz _"; //_ = "other"
 
 fn to_key(c : char) -> char {
-    if KEYS.contains_char(c.to_lowercase()) {c.to_lowercase()}
+    if KEYS.contains(c.to_lowercase()) {c.to_lowercase()}
     else {'_'}
 }
 
@@ -89,5 +87,24 @@ fn english_frequency(c: char) -> f32{
         'z' => 0.0003,
         ' ' => 0.1217,
         _   => 0.0657,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn best_score_test(){
+        let a = String::from_str("This is some english text");
+        let b = String::from_str("dq;ergjlfkg adg o;iqruiujjkdajg");
+        assert_eq!(best_score(&vec![a.clone(), b.clone()]), a);
+    }
+
+    #[test]
+    fn score_test(){
+        let a = "This is some english text";
+        let b = "dq;ergjlfkg adg o;iqruiujjkdajg";
+        assert!(score(a)<score(b));
     }
 }

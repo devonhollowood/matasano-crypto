@@ -27,16 +27,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn hamming_eq_test() {
+    fn hamming_dist_test() {
         let a = "this is a test".as_bytes();
         let b = "wokka wokka!!!".as_bytes();
+        let c = "this is not a test".as_bytes();
         assert_eq!(Some(37), hamming_dist(a,b));
-    }
-
-    #[test]
-    fn hamming_none_test() {
-        let a = "this is a test".as_bytes();
-        let b = "this is not a test".as_bytes();
-        assert_eq!(None, hamming_dist(a,b));
+        assert_eq!(None, hamming_dist(a,c));
     }
 }
