@@ -1,6 +1,6 @@
-mod hex;
-mod hamming;
-mod score;
+use hex;
+use hamming;
+use score;
 
 pub fn vigenere_crack(encoded: &[u8]) -> Option<Vec<u8>> {
     let blocksize = determine_blocksize(encoded);
