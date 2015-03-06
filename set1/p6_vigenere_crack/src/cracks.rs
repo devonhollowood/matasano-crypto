@@ -17,13 +17,13 @@ pub fn vigenere_crack(encoded: &[u8]) -> Option<Vec<u8>> {
 
 pub fn single_byte_crack(encoded: &[u8]) -> Option<u8> {
     use std::iter::range_inclusive;
+    use std::str::from_utf8;
     let mut min_score = 0f32;
     let mut min_byte = 0u8;
     for byte in range_inclusive(0u8, 255u8) {
         let hex = &hex::single_byte_xor(encoded, byte)[..];
         let answer;
-        println!("{:?}", hex); //debug
-        match std::str::from_utf8(hex) {
+        match from_utf8(hex) {
             Ok(s)  => answer = s,
             Err(_) => continue,
         }
@@ -63,23 +63,14 @@ fn determine_blocksize(hex: &[u8]) -> u8 {
     use std::slice::SliceExt;
     use std::iter::RandomAccessIterator;
     use std::iter::range_inclusive;
+    use std::iter::FromIterator;
     let mut min_blocksize = 0u8;
-    let mut min_dist = 0u32;
-    for blocksize in range_inclusive(2u8, 255u8) {
-        let mut chunks = hex.chunks(blocksize as usize);
-        let chunk0;
-        let chunk1;
-        match chunks.idx(0) {
-            Some(v) => chunk0 = v,
-            None    => continue,
-        }
-        match chunks.idx(1) {
-            Some(v) => chunk1 = v,
-            None    => continue,
-        }
+    let mut min_dist = 0f32;
+    for blocksize in range_inclusive(2u8, 40u8) {
+        let chunks = Vec::from_iter(hex.chunks(blocksize as usize).take(4));
         let dist;
-        match hamming::hamming_dist(&chunk0[..], &chunk1[..]) {
-            Some(d) => dist=d,
+        match hamming::avg_hamming_dist(&chunks[..]) {
+            Some(d) => dist=(d as f32)/(blocksize as f32),
             None    => continue,
         }
         if dist<min_dist || min_blocksize==0u8 {
@@ -94,10 +85,11 @@ fn determine_blocksize(hex: &[u8]) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hex;
 
     #[test]
     fn single_byte_crack_test() {
-        let hex = &super::hex::read_hex(
+        let hex = &hex::read_hex(
             "1b37373331363f78151b7f2b783431333d\
              78397828372d363c78373e783a393b3736").unwrap()[..];
         assert_eq!(single_byte_crack(hex), Some(0x58));
