@@ -1,0 +1,9 @@
+[package]
+
+name = "p9_pkcs_padding"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p9_pkcs_padding"
