@@ -15,7 +15,7 @@ fn detect_ecb(ciphertext: &[u8], blocksize: u16) -> bool {
     //get blocks
     let blocks = ciphertext.chunks(blocksize as usize);
     let nblocks = blocks.len();
-    
+
     //get number of repetitions
     let mut repetitions = HashMap::new();
     for block in blocks {
@@ -32,13 +32,13 @@ fn detect_ecb(ciphertext: &[u8], blocksize: u16) -> bool {
     for value in repetitions.values(){
         nrepetitions += *value;
     }
-    
+
     //calculate probablility
-    let expected = 
+    let expected =
         (nblocks.pow(2) as f32)/(2.pow(blocksize as u32) as f32);
 
     println!("nreps: {}", nrepetitions); //debug
-    
+
     nrepetitions as f32 > expected
 }
 
@@ -60,7 +60,7 @@ impl std::fmt::Display for Algorithm {
 fn encryption_oracle(ciphertext: &[u8]) -> Algorithm {
     match detect_ecb(ciphertext, 16) {
         true  => Algorithm::ECB,
-        false => Algorithm::CBC, 
+        false => Algorithm::CBC,
     }
 }
 
@@ -79,7 +79,7 @@ fn choose_cipher<R: rand::Rng>(rng: &mut R) -> Algorithm {
     }
 }
 
-fn create_cipher<R: rand::Rng>(rng: &mut R, plaintext: &[u8]) 
+fn create_cipher<R: rand::Rng>(rng: &mut R, plaintext: &[u8])
         -> (Vec<u8>, Algorithm) {
     use rand::sample;
     let before_size = sample(rng, 5..10, 1)[0];
@@ -88,7 +88,7 @@ fn create_cipher<R: rand::Rng>(rng: &mut R, plaintext: &[u8])
     let after = &generate_bytes(rng, after_size)[..];
     let algorithm = choose_cipher(rng);
     let key = &generate_bytes(rng, 16)[..];
-    let mut input = Vec::new(); 
+    let mut input = Vec::new();
     println!("before: {:?}", before); //debug
     println!("plaintext len: {}", plaintext.len()); //debug
     println!("after: {:?}", after); //debug
