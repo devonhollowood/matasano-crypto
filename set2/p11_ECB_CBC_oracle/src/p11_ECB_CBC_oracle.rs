@@ -11,7 +11,6 @@ fn detect_ecb(ciphertext: &[u8], blocksize: u16) -> bool {
     use std::collections::hash_map::Entry::{Occupied, Vacant};
     use std::num::Int;
 
-    println!("ciphertext len: {}", ciphertext.len()); //debug
     //get blocks
     let blocks = ciphertext.chunks(blocksize as usize);
     let nblocks = blocks.len();
@@ -19,10 +18,6 @@ fn detect_ecb(ciphertext: &[u8], blocksize: u16) -> bool {
     //get number of repetitions
     let mut repetitions = HashMap::new();
     for block in blocks {
-        for i in block.iter() { //debug
-            print!("{:02x}", *i); //debug
-        } //debug
-        println!(""); //debug
         match repetitions.entry(block) {
             Vacant(entry)   => {entry.insert(0);},
             Occupied(mut entry) => *entry.get_mut() += 1,
@@ -33,13 +28,7 @@ fn detect_ecb(ciphertext: &[u8], blocksize: u16) -> bool {
         nrepetitions += *value;
     }
 
-    //calculate probablility
-    let expected =
-        (nblocks.pow(2) as f32)/(2.pow(blocksize as u32) as f32);
-
-    println!("nreps: {}", nrepetitions); //debug
-
-    nrepetitions as f32 > expected
+    nrepetitions > 1
 }
 
 #[derive(PartialEq)]
@@ -89,12 +78,9 @@ fn create_cipher<R: rand::Rng>(rng: &mut R, plaintext: &[u8])
     let algorithm = choose_cipher(rng);
     let key = &generate_bytes(rng, 16)[..];
     let mut input = Vec::new();
-    println!("before: {:?}", before); //debug
-    println!("plaintext len: {}", plaintext.len()); //debug
-    println!("after: {:?}", after); //debug
-    //input.push_all(&before[..]);
+    input.push_all(&before[..]);
     input.push_all(plaintext);
-    //input.push_all(&after[..]);
+    input.push_all(&after[..]);
     let ciphertext = match algorithm {
         Algorithm::ECB => {
             ciphers::aes_ecb_encrypt(&input[..], &key[..]).unwrap()
@@ -126,7 +112,7 @@ fn load_txt(filename: &str) -> Result<String, String> {
 
 fn main() {
     use rand::thread_rng;
-    let plaintext = load_txt("red_and_black.txt").unwrap();
+    let plaintext = load_txt("../../text_samples/les_miserable.txt").unwrap();
     let mut rng = thread_rng();
     let mut score = 0;
     let iterations = 10;
