@@ -1,0 +1,14 @@
+[package]
+
+name = "p12_ECB_crack_simple"
+version = "0.1.0"
+authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
+
+[[bin]]
+
+name = "p12_ECB_crack_simple"
+
+[dependencies]
+rustc-serialize = "0.3"
+rand = "0.2"
+rust-crypto = "*"
