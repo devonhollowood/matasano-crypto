@@ -1,1 +1,5 @@
+#ignore scratch folder
 scratch
+#ignore rust stuff
+target
+Cargo.lock
