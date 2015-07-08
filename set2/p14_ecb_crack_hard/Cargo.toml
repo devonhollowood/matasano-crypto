@@ -6,7 +6,7 @@ authors = [ "Devon Hollowood <devonhollowood@gmail.com>" ]
 
 [[bin]]
 
-name = "p12_ecb_crack_hard"
+name = "p14_ecb_crack_hard"
 
 [dependencies]
 rustc-serialize = "*"

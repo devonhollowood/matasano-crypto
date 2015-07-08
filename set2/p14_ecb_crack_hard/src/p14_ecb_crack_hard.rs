@@ -9,18 +9,31 @@ mod oracle;
 use oracle::AesEcbOracle;
 
 fn find_blocksize(oracle: &AesEcbOracle) -> usize {
-    let mut blocksize = 1usize;
-    loop {
-        let current = oracle.encrypt(&vec![0x41; blocksize][..]);
-        let next = oracle.encrypt(&vec![0x41; blocksize+1][..]);
-        if next[0..blocksize]==current[0..blocksize] {
-            if oracle.encrypt(&vec![0x42; blocksize][..])[0..blocksize] ==
-               oracle.encrypt(&vec![0x42; blocksize+1][..])[0..blocksize] {
-               return blocksize;
+    //establish baseline for first changing block
+    let oracle0 = oracle.encrypt(&[]);
+    let oracle1 = oracle.encrypt(&[0]);
+    let mut previous_diff = first_difference(oracle0.iter(), oracle1.iter());
+    //find next block that changes. blocksize is difference between blocks
+    for n in 2..65 { //65 = 2*(max AES block size) + 1
+        let previous_pad = vec![0; n-1];
+        let pad = vec![0; n];
+        let previous = oracle.encrypt(&previous_pad[..]);
+        let current = oracle.encrypt(&pad[..]);
+        let diff = first_difference(previous.iter(), current.iter());
+        if diff != previous_diff {
+            //here dc is short for "double check"
+            let dc_previous_pad = vec![1; n-1];
+            let dc_pad = vec![1; n];
+            let dc_previous = oracle.encrypt(&dc_previous_pad[..]);
+            let dc = oracle.encrypt(&dc_pad[..]);
+            let dc_diff = first_difference(dc_previous.iter(), dc.iter());
+            if dc_diff == diff {
+                return diff-previous_diff;
             }
         }
-        blocksize += 1;
+        previous_diff = diff;
     }
+    panic!("Invalid blocksize");
 }
 
 #[test]
@@ -29,12 +42,112 @@ fn find_blocksize_test() {
     assert_eq!(find_blocksize(&oracle), 16);
 }
 
-fn crack_block(oracle: &AesEcbOracle, blocksize: usize,
+#[test]
+fn find_blocksize_prefix_multiple_of_blocksize() {
+    let key = [0x79, 0x65, 0x6c, 0x6c, 0x6f, 0x77, 0x20, 0x73, 0x75, 0x62,
+               0x6d, 0x61, 0x72, 0x69, 0x6e, 0x65]; //"yellow submarine"
+    let prefix = vec![0x41, 16];
+    let oracle = AesEcbOracle::controlled(&key, "hello world".as_bytes(), &prefix[..]);
+    assert_eq!(find_blocksize(&oracle), 16);
+}
+
+fn find_prefix_size(oracle: &AesEcbOracle, blocksize: usize) -> usize {
+    //establish baseline for first changing block
+    let oracle0 = oracle.encrypt(&[]);
+    let oracle1 = oracle.encrypt(&[0]);
+    let baseline_diff = first_difference(oracle0.chunks(blocksize),
+                                         oracle1.chunks(blocksize));
+    for pad_size in 1..blocksize+1 {
+        //set up blocks
+        let pad = vec![0; pad_size];
+        let encrypted = oracle.encrypt(&pad[..]);
+        let blocks = encrypted.chunks(blocksize);
+        //set up next_blocks
+        let next_pad = vec![0; pad_size+1];
+        let next_encrypted = oracle.encrypt(&next_pad[..]);
+        let next_blocks = next_encrypted.chunks(blocksize);
+        //get diff
+        let diff = first_difference(blocks, next_blocks);
+        if diff != baseline_diff {
+            //here dc is short for "double check"
+            let dc_pad = vec![1; pad_size];
+            let dc = oracle.encrypt(&dc_pad[..]);
+            let dc_next_pad = vec![1; pad_size];
+            let dc_next = oracle.encrypt(&dc_next_pad[..]);
+            let dc_diff = first_difference(dc.chunks(blocksize),
+                                           dc_next.chunks(blocksize));
+            if dc_diff != baseline_diff {
+                let prefix_size = (diff-1)*blocksize+(blocksize-pad_size);
+                return prefix_size;
+            }
+        }
+    }
+    panic!("Invalid prefix size!");
+}
+
+#[test]
+fn find_prefix_size_0() {
+    let key = [0x79, 0x65, 0x6c, 0x6c, 0x6f, 0x77, 0x20, 0x73, 0x75, 0x62,
+               0x6d, 0x61, 0x72, 0x69, 0x6e, 0x65]; //"yellow submarine"
+    let oracle = AesEcbOracle::controlled(&key, "hello world".as_bytes(), &[]);
+    assert_eq!(find_prefix_size(&oracle, 16), 0);
+}
+
+#[test]
+fn find_prefix_size_1() {
+    let key = [0x79, 0x65, 0x6c, 0x6c, 0x6f, 0x77, 0x20, 0x73, 0x75, 0x62,
+               0x6d, 0x61, 0x72, 0x69, 0x6e, 0x65]; //"yellow submarine"
+    let prefix = vec![0; 1];
+    let oracle = AesEcbOracle::controlled(&key, "hello world".as_bytes(), &prefix[..]);
+    assert_eq!(find_prefix_size(&oracle, 16), 1);
+}
+
+#[test]
+fn find_prefix_size_255() {
+    let key = [0x79, 0x65, 0x6c, 0x6c, 0x6f, 0x77, 0x20, 0x73, 0x75, 0x62,
+               0x6d, 0x61, 0x72, 0x69, 0x6e, 0x65]; //"yellow submarine"
+    let prefix = vec![0; 255];
+    let oracle = AesEcbOracle::controlled(&key, "hello world".as_bytes(), &prefix[..]);
+    assert_eq!(find_prefix_size(&oracle, 16), 255);
+}
+
+fn first_difference<T, I, J>(mut a: I, mut b: J) -> usize
+    where T: PartialEq,
+          I: Iterator<Item=T>,
+          J: Iterator<Item=T> {
+    let mut diff_n = 0usize;
+    while let (Some(x), Some(y)) = (a.next(), b.next()) {
+        if x == y {
+            diff_n += 1;
+        }
+        else {
+            break;
+        }
+    }
+    diff_n
+}
+
+#[test]
+fn first_difference_diff() {
+    let a = "012345".to_string();
+    let b = vec!['0','1','2','4','5'];
+    assert_eq!(first_difference(a.chars(), b.iter().cloned()), 3);
+}
+
+#[test]
+fn first_difference_same() {
+    let a = "012345".to_string();
+    let b = vec!['0','1','2','3','4','5'];
+    assert_eq!(first_difference(a.chars(), b.iter().cloned()), 6);
+}
+
+fn crack_block(oracle: &AesEcbOracle, blocksize: usize, prefix_size: usize,
                so_far : &[u8]) -> Vec<u8> {
-    let target_idx = so_far.len()/blocksize; //index of targeted block
+    let target_idx = (prefix_size + so_far.len())/blocksize + 1; //index of targeted block
+    let prefix_pad_size = blocksize - (prefix_size % blocksize);
     let mut solved = Vec::new();
     while solved.len() < blocksize {
-        let pad = vec![0; blocksize-solved.len()-1];
+        let pad = vec![0; prefix_pad_size + blocksize-solved.len()-1];
         let pad_encrypted = oracle.encrypt(&pad[..]);
         let target_block = pad_encrypted.chunks(blocksize).nth(target_idx)
                                         .unwrap();
@@ -73,16 +186,17 @@ fn crack_block(oracle: &AesEcbOracle, blocksize: usize,
 fn crack_ecb_oracle(oracle: &AesEcbOracle)
         -> Result<Vec<u8>, String> {
     let blocksize = find_blocksize(oracle);
+    let prefix_size = find_prefix_size(oracle, blocksize);
     let ciphertext = oracle.encrypt(&[]);
-    let ecb_test = vec![0x41; 2*blocksize].into_iter().chain(
+    let ecb_test = vec![0x41; 3*blocksize].into_iter().chain(
         ciphertext.iter().cloned()
     ).collect::<Vec<u8>>();
     if !ecb::detect_ecb(&ecb_test[..], blocksize) {
         return Err("Wasn't ecb".to_string());
     }
     let mut so_far = Vec::<u8>::new();
-    while so_far.len() < ciphertext.len() {
-        let next = crack_block(oracle, blocksize, &so_far[..]);
+    while so_far.len() + prefix_size < ciphertext.len() {
+        let next = crack_block(oracle, blocksize, prefix_size, &so_far[..]);
         so_far.extend(next);
     }
     Ok(so_far)
