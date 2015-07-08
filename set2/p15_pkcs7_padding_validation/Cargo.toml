@@ -1,0 +1,8 @@
+[package]
+name = "p15_pkcs7_padding_validation"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[[bin]]
+
+name = "p15_pkcs7_padding_validation"
