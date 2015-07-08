@@ -5,7 +5,7 @@ use std::error::Error;
 use regex::Regex;
 use aes;
 
-enum Role {
+pub enum Role {
     User,
     Admin,
 }
@@ -19,10 +19,44 @@ impl Display for Role {
     }
 }
 
-struct Profile {
-    email: String,
-    uid: u64,
-    role: Role,
+pub struct Profile {
+    pub email: String,
+    pub uid: u64,
+    pub role: Role,
+}
+
+impl Profile {
+    pub fn profile_for(email: &str) -> Profile {
+        let cleaned_email = email.chars().filter(|&c| c != '&' && c != '=').collect();
+        Profile { email: cleaned_email, uid: 10, role: Role::User }
+    }
+
+    pub fn is_admin(&self) -> bool {
+        match self.role {
+            Role::Admin => true,
+            _ => false,
+        }
+    }
+
+    pub fn encrypt(&self, key: &[u8]) -> Vec<u8> {
+        aes::aes_ecb_encrypt(format!("{}", &self).as_bytes(), key)
+    }
+
+    pub fn decrypt(ciphertext: &[u8], key: &[u8]) -> Result<Profile, ProfileError> {
+        use crypto::symmetriccipher::SymmetricCipherError;
+        match aes::aes_ecb_decrypt(ciphertext, key) {
+            Ok(v) =>  match String::from_utf8(v) {
+                Ok(s) => Profile::from_str(&s[..]),
+                Err(e) => Err(ProfileError::BadParse(format!("{}", e))),
+            },
+            Err(e) => match e {
+                SymmetricCipherError::InvalidLength =>
+                    Err(ProfileError::BadDecrypt("invalid length".to_string())),
+                SymmetricCipherError::InvalidPadding =>
+                    Err(ProfileError::BadDecrypt("invalid padding".to_string())),
+            }
+        }
+    }
 }
 
 impl Display for Profile {
@@ -38,9 +72,9 @@ impl FromStr for Profile {
     fn from_str(s: &str) -> Result<Self, ProfileError> {
         let re = Regex::new(r"email=([^&=]*)&uid=(\d+)&role=(user|admin)").unwrap();
         if let Some(caps) = re.captures(s) {
-            let email = caps.at(0).unwrap();
-            let uid = caps.at(1).unwrap().parse::<u64>().unwrap();
-            let role = match caps.at(2).unwrap() {
+            let email = caps.at(1).unwrap();
+            let uid = caps.at(2).unwrap().parse::<u64>().unwrap();
+            let role = match caps.at(3).unwrap() {
                 "user" => Role::User,
                 "admin" => Role::Admin,
                 _ => panic!("This regex (Profile::from_str()) doesn't work at all!"),
@@ -54,7 +88,7 @@ impl FromStr for Profile {
 }
 
 #[derive(Debug)]
-enum ProfileError {
+pub enum ProfileError {
     BadParse(String),
     BadDecrypt(String),
 }
@@ -79,26 +113,3 @@ impl Error for ProfileError {
     }
 }
 
-fn profile_for(email: &str) -> Profile {
-    Profile { email: email.to_string(), uid: 10, role: Role::User }
-}
-
-fn encrypt(profile: Profile, key: &[u8]) -> Vec<u8> {
-    aes::aes_ecb_encrypt(format!("{}", profile).as_bytes(), key)
-}
-
-fn decrypt(ciphertext: &[u8], key: &[u8]) -> Result<Profile, ProfileError> {
-    use crypto::symmetriccipher::SymmetricCipherError;
-    match aes::aes_ecb_decrypt(ciphertext, key) {
-        Ok(v) =>  match String::from_utf8(v) {
-            Ok(s) => Profile::from_str(&s[..]),
-            Err(e) => Err(ProfileError::BadParse(format!("{}", e))),
-        },
-        Err(e) => match e {
-            SymmetricCipherError::InvalidLength =>
-                Err(ProfileError::BadDecrypt("invalid length".to_string())),
-            SymmetricCipherError::InvalidPadding =>
-                Err(ProfileError::BadDecrypt("invalid padding".to_string())),
-        }
-    }
-}
