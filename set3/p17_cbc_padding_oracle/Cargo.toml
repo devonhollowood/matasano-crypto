@@ -1,0 +1,9 @@
+[package]
+name = "p17_cbc_padding_oracle"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[dependencies]
+rust-crypto = "*"
+rustc-serialize = "*"
+rand = "*"
