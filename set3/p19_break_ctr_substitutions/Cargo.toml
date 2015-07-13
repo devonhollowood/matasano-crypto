@@ -1,0 +1,8 @@
+[package]
+name = "p19_break_ctr_substitutions"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[dependencies]
+rust-crypto = "*"
+rustc-serialize = "*"
