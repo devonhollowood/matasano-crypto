@@ -1,0 +1,8 @@
+[package]
+name = "p18_implement_ctr"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[dependencies]
+rust-crypto = "*"
+rustc-serialize = "*"
