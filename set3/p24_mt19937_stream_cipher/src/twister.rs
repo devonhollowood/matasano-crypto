@@ -6,7 +6,6 @@ pub struct Twister {
 }
 
 impl Twister {
-    #[cfg(test)]
     pub fn new(seed: u32) -> Twister {
         let mut state = [0u32; 624];
         state[0] = seed;
