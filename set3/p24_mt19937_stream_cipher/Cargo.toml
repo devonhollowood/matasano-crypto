@@ -1,0 +1,4 @@
+[package]
+name = "p24_mt19937_stream_cipher"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
