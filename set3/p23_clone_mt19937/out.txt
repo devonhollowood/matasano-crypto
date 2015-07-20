@@ -1,0 +1,19 @@
+   Compiling p23_clone_mt19937 v0.1.0 (file:///Users/devon/Documents/Programming/matasano-crypto/set3/p23_clone_mt19937)
+     Running target/debug/p23_clone_mt19937-39391b65fa11f437
+
+running 6 tests
+test tests::unshiftl_tests ... ok
+test twister::tests::first_10_0 ... ok
+test twister::tests::first_10_42601 ... ok
+test twister::tests::new_0 ... ok
+test tests::unshiftr_tests ... ok
+test twister::tests::skip_1000_0 ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+
+   Doc-tests p23_clone_mt19937
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
+

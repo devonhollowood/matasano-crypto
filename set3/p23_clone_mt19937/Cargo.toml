@@ -1,0 +1,4 @@
+[package]
+name = "p23_clone_mt19937"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
