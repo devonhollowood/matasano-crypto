@@ -1,0 +1,10 @@
+[package]
+name = "p28_sha1_keyed_mac"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[lib]
+name = "sha1_mac"
+
+[dependencies]
+rust-crypto = "*"
