@@ -4,5 +4,7 @@ version = "0.1.0"
 authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
 
 [dependencies]
-rust-crypto = "*"
 rand = "*"
+
+[lib]
+name = "md4"
