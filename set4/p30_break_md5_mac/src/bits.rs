@@ -55,6 +55,15 @@ pub fn u32_to_u8_be(words: &[u32]) -> Vec<u8> {
     bytes
 }
 
+///Splits a slice of u32s to a Vec of u8s, in little-endian order
+pub fn u32_to_u8_le(words: &[u32]) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(words.len()*8);
+    for word in words.iter() {
+        bytes.extend(u32_bytes_le(*word).into_iter());
+    }
+    bytes
+}
+
 ///Gives bytes in `word` in big-endian order
 pub fn u64_bytes_be(word: u64) -> [u8; 8] {
     let mut bytes = [0; 8];
@@ -117,6 +126,15 @@ mod tests {
                             0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x13, 0x37,
                             0xc0, 0xde];
         assert_eq!(super::u32_to_u8_be(&input[..]), expected);
+    }
+
+    #[test]
+    fn u32_to_u8_le() {
+        let input = [0x01234567, 0x89abcdef, 0xfedcba98, 0x76543210, 0x1337];
+        let expected = vec![0x67, 0x45, 0x23, 0x01, 0xef, 0xcd, 0xab, 0x89,
+                            0x98, 0xba, 0xdc, 0xfe, 0x10, 0x32, 0x54, 0x76,
+                            0x37, 0x13, 0x00, 0x00];
+        assert_eq!(super::u32_to_u8_le(&input[..]), expected);
     }
 
     #[test]

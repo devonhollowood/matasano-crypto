@@ -1,6 +1,20 @@
 //!Set of utilities for MD4
 mod bits;
 
+pub fn md4(message: &[u8]) -> [u8; 16] {
+    let mut md4_values = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
+    for block in pad_and_partition(0, message) {
+        md4_values = md4_continue(&block, &md4_values);
+    }
+    let result_vec = bits::u32_to_u8_le(&md4_values[..]);
+    let mut result_iter = result_vec.into_iter();
+    let mut result = [0; 16];
+    for idx in 0..16 {
+        result[idx] = result_iter.next().unwrap();
+    }
+    result
+}
+
 ///Pads `message` (with `length_addition` bytes added to the total length), and
 ///partitions the result into a vector of 512-bit chunks
 pub fn pad_and_partition(length_addition: usize, message: &[u8]) -> Vec<[u32; 16]> {
@@ -138,6 +152,13 @@ mod tests {
             print!("{:x} ", val);
         }
         println!("")
+    }
+
+    #[test]
+    fn md4() {
+        let expected = [0xfd, 0x93, 0x87, 0x43, 0x93, 0xff, 0x9f, 0xb2,
+                        0x53, 0x77, 0x3a, 0xa3, 0x52, 0x51, 0x06, 0xf5];
+        assert_eq!(super::md4(b"yellow submarine"), expected);
     }
 
     #[test]
