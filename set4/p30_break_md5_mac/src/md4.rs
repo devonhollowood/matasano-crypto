@@ -1,3 +1,4 @@
+//!Set of utilities for MD4
 mod bits;
 
 ///Pads `message` (with `length_addition` bytes added to the total length), and
@@ -42,67 +43,83 @@ pub fn create_pad(message_len: usize, length_addition: usize) -> Vec<u8> {
 ///Gives new MD4 values, given old values `md4_values` and a block `block` to
 ///digest
 pub fn md4_continue(block: &[u32; 16], md4_values: &[u32; 4]) -> [u32; 4] {
-    //shifts for each round
-    let s: [u32; 64] = [ 7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12,
-                        17, 22,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
-                         5,  9, 14, 20,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11,
-                        16, 23,  4, 11, 16, 23,  6, 10, 15, 21,  6, 10, 15, 21,
-                         6, 10, 15, 21,  6, 10, 15, 21];
-
-    //"k" array
-    let k: [u32; 64] = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
-                        0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
-                        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
-                        0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
-                        0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa,
-                        0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
-                        0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
-                        0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
-                        0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
-                        0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
-                        0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05,
-                        0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
-                        0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039,
-                        0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
-                        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
-                        0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391];
+    //auxilary functions
+    fn f(x: u32, y: u32, z: u32) -> u32 { (x & y) | (!x & z) }
+    fn g(x: u32, y: u32, z: u32) -> u32 { (x & y) | (x & z) | (y & z) }
+    fn h(x: u32, y: u32, z: u32) -> u32 { x ^ y ^ z }
 
     //process block
     let mut a = md4_values[0];
     let mut b = md4_values[1];
     let mut c = md4_values[2];
     let mut d = md4_values[3];
-    for idx in 0..63 {
-        let f;
-        let g;
-        if idx < 16 {
-            f = (b & c) | (!b & d);
-            g = idx;
-        }
-        else if idx < 32 {
-            f = (d & b) | (!d & c);
-            g = (5*idx + 1) % 16;
-        }
-        else if idx < 48 {
-            f = b ^ c ^ d;
-            g = (3*idx + 5) % 16;
-        }
-        else {
-            f = c ^ (b | !d);
-            g = (7*idx) % 16;
-        }
-        let temp = d;
-        d = c;
-        c = b;
-        b = b.wrapping_add(
-                (a.wrapping_add(f)
-                  .wrapping_add(k[idx])
-                  .wrapping_add(block[g])
-                ).rotate_left(s[idx])
-            );
-        a = temp;
-    }
 
+    //round 1
+    fn round_1(x:u32, y:u32, z: u32, w: u32, i: u32, s: u32) -> u32 {
+        x.wrapping_add(f(y,z,w)).wrapping_add(i).rotate_left(s)
+    }
+    a = round_1(a, b, c, d, block[ 0],  3);
+    d = round_1(d, a, b, c, block[ 1],  7);
+    c = round_1(c, d, a, b, block[ 2], 11);
+    b = round_1(b, c, d, a, block[ 3], 19);
+    a = round_1(a, b, c, d, block[ 4],  3);
+    d = round_1(d, a, b, c, block[ 5],  7);
+    c = round_1(c, d, a, b, block[ 6], 11);
+    b = round_1(b, c, d, a, block[ 7], 19);
+    a = round_1(a, b, c, d, block[ 8],  3);
+    d = round_1(d, a, b, c, block[ 9],  7);
+    c = round_1(c, d, a, b, block[10], 11);
+    b = round_1(b, c, d, a, block[11], 19);
+    a = round_1(a, b, c, d, block[12],  3);
+    d = round_1(d, a, b, c, block[13],  7);
+    c = round_1(c, d, a, b, block[14], 11);
+    b = round_1(b, c, d, a, block[15], 19);
+
+    //round 2
+    fn round_2(x:u32, y:u32, z: u32, w: u32, i: u32, s: u32) -> u32 {
+        x.wrapping_add(g(y,z,w)).wrapping_add(i).wrapping_add(0x5a827999)
+         .rotate_left(s)
+    }
+    a = round_2(a, b, c, d, block[ 0],  3);
+    d = round_2(d, a, b, c, block[ 4],  5);
+    c = round_2(c, d, a, b, block[ 8],  9);
+    b = round_2(b, c, d, a, block[12], 13);
+    a = round_2(a, b, c, d, block[ 1],  3);
+    d = round_2(d, a, b, c, block[ 5],  5);
+    c = round_2(c, d, a, b, block[ 9],  9);
+    b = round_2(b, c, d, a, block[13], 13);
+    a = round_2(a, b, c, d, block[ 2],  3);
+    d = round_2(d, a, b, c, block[ 6],  5);
+    c = round_2(c, d, a, b, block[10],  9);
+    b = round_2(b, c, d, a, block[14], 13);
+    a = round_2(a, b, c, d, block[ 3],  3);
+    d = round_2(d, a, b, c, block[ 7],  5);
+    c = round_2(c, d, a, b, block[11],  9);
+    b = round_2(b, c, d, a, block[15], 13);
+
+    //round 3
+    fn round_3(x:u32, y:u32, z: u32, w: u32, i: u32, s: u32) -> u32 {
+        x.wrapping_add(h(y,z,w)).wrapping_add(i).wrapping_add(0x6ed9eba1)
+         .rotate_left(s)
+    }
+    a = round_3(a, b, c, d, block[ 0],  3);
+    d = round_3(d, a, b, c, block[ 8],  9);
+    c = round_3(c, d, a, b, block[ 4], 11);
+    b = round_3(b, c, d, a, block[12], 15);
+    a = round_3(a, b, c, d, block[ 2],  3);
+    d = round_3(d, a, b, c, block[10],  9);
+    c = round_3(c, d, a, b, block[ 6], 11);
+    b = round_3(b, c, d, a, block[14], 15);
+    a = round_3(a, b, c, d, block[ 1],  3);
+    d = round_3(d, a, b, c, block[ 9],  9);
+    c = round_3(c, d, a, b, block[ 5], 11);
+    b = round_3(b, c, d, a, block[13], 15);
+    a = round_3(a, b, c, d, block[ 3],  3);
+    d = round_3(d, a, b, c, block[11],  9);
+    c = round_3(c, d, a, b, block[ 7], 11);
+    b = round_3(b, c, d, a, block[15], 15);
+
+    //output
     [md4_values[0].wrapping_add(a),
      md4_values[1].wrapping_add(b),
      md4_values[2].wrapping_add(c),
@@ -185,11 +202,9 @@ mod tests {
     fn md4_continue() {
         let md4_values = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
         let block = super::pad_and_partition(0, b"yellow submarine")
-            .into_iter().next().unwrap(); //TODO: fix
-        //let block = [0x6c6c6579, 0x7320776f, 0x616d6275, 0x656e6972, 0x00000080, 0x0,
-        //             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x80000000, 0x0];
+            .into_iter().next().unwrap();
         hex_print("block", block.iter());
-        let expected = [0x17c25ea3, 0xd21d5ce1, 0x181a2058, 0x7c891448];
+        let expected = [0x438793fd, 0xb29fff93, 0xa33a7753, 0xf5065152];
         let result = super::md4_continue(&block, &md4_values);
         println!("");
         hex_print("result  ", result.iter());

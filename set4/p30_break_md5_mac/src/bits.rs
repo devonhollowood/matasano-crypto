@@ -1,4 +1,4 @@
-///!Useful bitwise operations
+//!Useful bitwise operations
 
 ///Combines a slice of u8s into a Vec of u32s, with the u8s being considered
 ///to be in big-endian order
