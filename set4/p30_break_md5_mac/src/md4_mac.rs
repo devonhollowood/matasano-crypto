@@ -1,3 +1,6 @@
+mod md4;
+mod bits;
+
 ///Secret-prefix SHA-1 MAC
 pub struct Md5Mac {
     key: Vec<u8>,
@@ -11,27 +14,10 @@ impl Md5Mac {
     }
 
     ///Prepends secret key to `bytes` and then hashes
-    pub fn hash(&self, bytes: &[u8]) -> [u8; 16] {
-        use crypto::digest::Digest;
-        use crypto::md5::Md5;
-        let mut hasher = Md5::new();
+    pub fn hash(&self, bytes: &[u8]) -> [u8; 16] {;
         let input = self.key.iter().cloned().chain(bytes.iter().cloned())
                         .collect::<Vec<u8>>();
-        hasher.input(&input[..]);
-        let mut output = [0; 16];
-        hasher.result(& mut output[..]);
-        output
-    }
-
-    ///Convenience function, which returns string representation of `hash(bytes)`
-    pub fn hash_str(&self, bytes: &[u8]) -> String {
-        use crypto::digest::Digest;
-        use crypto::md5::Md5;
-        let mut hasher = Md5::new();
-        let input = self.key.iter().cloned().chain(bytes.iter().cloned())
-                        .collect::<Vec<u8>>();
-        hasher.input(&input[..]);
-        hasher.result_str()
+        md4::md4(&input[..])
     }
 
     ///True if the hash of `message` prepended with the secret key is equal to
@@ -56,8 +42,8 @@ mod tests {
     fn hash() {
         let mac = Md5Mac::new(b"yellow submarine");
         let hash = mac.hash(b"in the town where i was born");
-        let expected = [0x47, 0xef, 0x41, 0x6a, 0xa4, 0xbb, 0xcb, 0x98,
-                        0x38, 0xba, 0x09, 0xb5, 0xe0, 0x9c, 0x45, 0x16];
+        let expected = [0x7f, 0x26, 0x3f, 0x8c, 0xea, 0x65, 0x28, 0xd5,
+                        0x7f, 0xc7, 0x8d, 0xa5, 0xe5, 0xeb, 0x27, 0xb6];
         assert_eq!(hash, expected);
     }
 
@@ -81,18 +67,10 @@ mod tests {
     }
 
     #[test]
-    fn hash_str() {
-        let mac = Md5Mac::new(b"yellow submarine");
-        let hash = mac.hash_str(b"in the town where i was born");
-        let expected = String::from("47ef416aa4bbcb9838ba09b5e09c4516");
-        assert_eq!(hash, expected);
-    }
-
-    #[test]
     fn validate() {
         let mac = Md5Mac::new(b"yellow submarine");
-        let hash = [0x47, 0xef, 0x41, 0x6a, 0xa4, 0xbb, 0xcb, 0x98,
-                    0x38, 0xba, 0x09, 0xb5, 0xe0, 0x9c, 0x45, 0x16];
+        let hash = [0x7f, 0x26, 0x3f, 0x8c, 0xea, 0x65, 0x28, 0xd5,
+                    0x7f, 0xc7, 0x8d, 0xa5, 0xe5, 0xeb, 0x27, 0xb6];
         assert!(mac.validate(b"in the town where i was born", &hash));
     }
 }

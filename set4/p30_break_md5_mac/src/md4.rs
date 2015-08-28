@@ -1,5 +1,6 @@
 //!Set of utilities for MD4
-mod bits;
+
+use bits;
 
 pub fn md4(message: &[u8]) -> [u8; 16] {
     let mut md4_values = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
@@ -143,6 +144,7 @@ pub fn md4_continue(block: &[u32; 16], md4_values: &[u32; 4]) -> [u32; 4] {
 #[cfg(test)]
 mod tests {
     use std::fmt::LowerHex;
+    use bits;
 
     pub fn hex_print<I, H>(desc: &str, mut iter: I)
     where H: LowerHex,
@@ -173,7 +175,7 @@ mod tests {
         use std::iter::{once, repeat};
         let expected = once(0x80)
                        .chain(repeat(0x00).take(39))
-                       .chain(super::bits::u64_bytes_le(16*8).iter().cloned())
+                       .chain(bits::u64_bytes_le(16*8).iter().cloned())
                        .collect::<Vec<u8>>();
         assert_eq!(super::create_pad(16, 0), expected);
     }
@@ -183,7 +185,7 @@ mod tests {
         use std::iter::{once, repeat};
         let expected = once(0x80)
                        .chain(repeat(0x00).take(39))
-                       .chain(super::bits::u64_bytes_le(24617*8).iter().cloned())
+                       .chain(bits::u64_bytes_le(24617*8).iter().cloned())
                        .collect::<Vec<u8>>();
         assert_eq!(super::create_pad(16, 24601), expected);
     }

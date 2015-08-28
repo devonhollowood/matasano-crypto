@@ -7,4 +7,4 @@ authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
 rand = "*"
 
 [lib]
-name = "md4"
+name = "md4_mac"
