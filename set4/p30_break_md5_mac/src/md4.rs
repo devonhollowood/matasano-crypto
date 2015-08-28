@@ -143,18 +143,7 @@ pub fn md4_continue(block: &[u32; 16], md4_values: &[u32; 4]) -> [u32; 4] {
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::LowerHex;
     use bits;
-
-    pub fn hex_print<I, H>(desc: &str, mut iter: I)
-    where H: LowerHex,
-          I: Iterator<Item = H> { //debug
-        print!("{}: ", desc);
-        while let Some(val) = iter.next() {
-            print!("{:x} ", val);
-        }
-        println!("")
-    }
 
     #[test]
     fn md4() {
@@ -226,12 +215,9 @@ mod tests {
         let md4_values = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
         let block = super::pad_and_partition(0, b"yellow submarine")
             .into_iter().next().unwrap();
-        hex_print("block", block.iter());
         let expected = [0x438793fd, 0xb29fff93, 0xa33a7753, 0xf5065152];
         let result = super::md4_continue(&block, &md4_values);
         println!("");
-        hex_print("result  ", result.iter());
-        hex_print("expected", expected.iter());
         assert_eq!(result, expected);
     }
 }

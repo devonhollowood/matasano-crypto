@@ -1,16 +1,16 @@
-mod md4;
-mod bits;
+use md4;
+use bits;
 
-///Secret-prefix SHA-1 MAC
-pub struct Md5Mac {
+///Secret-prefix MD4 MAC
+pub struct Md4Mac {
     key: Vec<u8>,
 }
 
-impl Md5Mac {
+impl Md4Mac {
 
-    ///Creates a new Md5Mac with given key
-    pub fn new(key: &[u8]) -> Md5Mac {
-        Md5Mac { key: key.to_vec() }
+    ///Creates a new Md4Mac with given key
+    pub fn new(key: &[u8]) -> Md4Mac {
+        Md4Mac { key: key.to_vec() }
     }
 
     ///Prepends secret key to `bytes` and then hashes
@@ -30,17 +30,17 @@ impl Md5Mac {
 
 #[cfg(test)]
 mod tests {
-    use super::Md5Mac;
+    use super::Md4Mac;
 
     #[test]
     fn new() {
-        let mac = Md5Mac::new(b"yellow submarine");
+        let mac = Md4Mac::new(b"yellow submarine");
         assert_eq!(mac.key, b"yellow submarine".to_vec());
     }
 
     #[test]
     fn hash() {
-        let mac = Md5Mac::new(b"yellow submarine");
+        let mac = Md4Mac::new(b"yellow submarine");
         let hash = mac.hash(b"in the town where i was born");
         let expected = [0x7f, 0x26, 0x3f, 0x8c, 0xea, 0x65, 0x28, 0xd5,
                         0x7f, 0xc7, 0x8d, 0xa5, 0xe5, 0xeb, 0x27, 0xb6];
@@ -50,7 +50,7 @@ mod tests {
     #[test]
     #[should_panic(expected="assertion failed")]
     fn hash_different_message() {
-        let mac = Md5Mac::new(b"yellow submarine");
+        let mac = Md4Mac::new(b"yellow submarine");
         let hash_a = mac.hash(b"in the town where i was born");
         let hash_b = mac.hash(b"in the town where I was born");
         assert_eq!(hash_a, hash_b);
@@ -59,16 +59,16 @@ mod tests {
     #[test]
     #[should_panic(expected="assertion failed")]
     fn hash_different_keys() {
-        let mac_a = Md5Mac::new(b"yellow submarine");
+        let mac_a = Md4Mac::new(b"yellow submarine");
         let hash_a = mac_a.hash(b"in the town where i was born");
-        let mac_b = Md5Mac::new(b"octopus's garden");
+        let mac_b = Md4Mac::new(b"octopus's garden");
         let hash_b = mac_b.hash(b"in the town where i was born");
         assert_eq!(hash_a, hash_b);
     }
 
     #[test]
     fn validate() {
-        let mac = Md5Mac::new(b"yellow submarine");
+        let mac = Md4Mac::new(b"yellow submarine");
         let hash = [0x7f, 0x26, 0x3f, 0x8c, 0xea, 0x65, 0x28, 0xd5,
                     0x7f, 0xc7, 0x8d, 0xa5, 0xe5, 0xeb, 0x27, 0xb6];
         assert!(mac.validate(b"in the town where i was born", &hash));
