@@ -1,0 +1,7 @@
+[package]
+name = "p31_hmac_timing"
+version = "0.1.0"
+authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
+
+[dependencies]
+rust-crypto = "*"
