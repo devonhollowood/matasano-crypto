@@ -5,3 +5,6 @@ authors = ["Devon Hollowood <devonhollowood@gmail.com>"]
 
 [dependencies]
 rust-crypto = "*"
+hyper = "*"
+rustc-serialize = "*"
+rand = "*"
