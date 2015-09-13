@@ -23,7 +23,6 @@ fn crack(mut client: &mut Client) -> Option<[u8; 20]> {
     let mut query = [0u8; 20];
     for idx in 0..query.len() {
         query[idx] = crack_idx(client, &mut query, idx);
-        println!("\rCracking: {}", format_hex(&query[..idx+1]));
         std::io::stdout().flush().unwrap();
     }
     println!("");
@@ -39,22 +38,27 @@ fn crack(mut client: &mut Client) -> Option<[u8; 20]> {
 
 fn crack_idx(mut client: &mut Client, query: &mut [u8; 20], idx: usize) -> u8 {
     const NPASSES: usize = 10;
-    //get average delays
-    let mut delay_avgs = [0u64; 256];
+    //get delays
+    let mut delays = vec![Vec::new(); 256];
     for pass in 0..(NPASSES as u64) {
         for byte in (0usize..256) {
             query[idx] = byte as u8;
             let new_delay = get_delay(client, &query[..]);
-            delay_avgs[byte] =
-                (new_delay + pass*delay_avgs[byte])/(pass+1)
+            delays[byte].push(new_delay);
+            let complete = idx*NPASSES*256 + (pass as usize)*256 + byte;
+            let todo = query.len()*NPASSES*256;
+            let percent = complete*100/todo;
+            print!("\rCracking ({}%): {}", percent, format_hex(&query[..idx+1]));
         }
     }
-    //get best average
+    //get best median delay
     let mut max_delay = 0;
     let mut best_byte = 0;
-    for byte in 0..delay_avgs.len() {
-        if delay_avgs[byte] > max_delay {
-            max_delay = delay_avgs[byte];
+    for byte in 0..delays.len() {
+        delays[byte].sort();
+        let median = delays[byte][NPASSES/2];
+        if median > max_delay {
+            max_delay = median;
             best_byte = byte as u8;
         }
     }

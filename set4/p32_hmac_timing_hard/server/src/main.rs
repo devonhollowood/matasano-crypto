@@ -11,7 +11,7 @@ use hyper::net::Fresh;
 use hyper::uri::RequestUri::AbsolutePath;
 
 const HOST: &'static str = "localhost:9000";
-const DELAY: u32 = 5;
+const DELAY: u32 = 1;
 
 fn main() {
     let key = gen_key();
